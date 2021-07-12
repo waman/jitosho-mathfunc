@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { gamma } from './GammaFunction'
 
 it('Output function graph', () => {
-    outputChart('./dist/chart.html', 'Gamma function', gamma, -5, 5);
+    outputChart('./dist/chart.html', 'Gamma function', gamma, -10, 10);
 });
 
 function outputChart(file: string, name: string, f: (x: number) => number,

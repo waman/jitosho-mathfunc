@@ -1,5 +1,6 @@
 /** (1/2)log(2π) */
 const LOG_2PI_BY2 = Math.log(2 * Math.PI) / 2;
+/** log π */
 const N = 8;
 
 // Bernoulli numbers
@@ -16,6 +17,7 @@ const B16 = -3617/510;
 
 /**
  * Return a logarithm value of the gamma function.
+ * The argument *x* must be positive.
  * 
  * Ref: 『Javaによるアルゴリズム事典』ガンマ関数 (gamma function) Gamma.java
  * 　　　『改訂新版 Cによる標準アルゴリズム事典』ガンマ関数 (gamma function) gamma.c
