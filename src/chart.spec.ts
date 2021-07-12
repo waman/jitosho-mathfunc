@@ -1,8 +1,8 @@
 import * as fs from 'fs';
-import { gamma } from './GammaFunction'
+import { beta, gamma } from './GammaFunction'
 
 it('Output function graph', () => {
-    outputChart('./dist/chart.html', 'Gamma function', gamma, -10, 10);
+    outputChart('./dist/chart.html', 'Gamma function', x => beta(1, x), -10, 10);
 });
 
 function outputChart(file: string, name: string, f: (x: number) => number,

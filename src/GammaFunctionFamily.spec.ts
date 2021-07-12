@@ -1,10 +1,15 @@
 import { assert } from "chai"
-import { setupMaster } from "cluster";
-import { gamma } from "./GammaFunction";
+import { beta, gamma } from "./GammaFunction";
 import { chi2CDF, chi2CDFUpper, erf, erfc, igamma, iGamma, normalCDF, normalCDFUpper, pGamma, qGamma } from "./IncompleteGammaFunction";
 
 const epsilon = 1e-7;
 const bigValue = 1e10
+
+function repeat(n: number, f: () => void){
+    for(let i = 0; i < n; i++){
+        f();
+    }
+}
 
 describe('Gamma function', () => {
 
@@ -25,6 +30,63 @@ describe('Gamma function', () => {
     });
 });
 
+/**
+ * The following tests refer to
+ * <a href="https://en.m.wikipedia.org/wiki/Beta_function">Beta gamma function</a>
+ */
+describe('Beta function', () => {
+
+    function rand(): number {
+        return Math.random() * 100;
+    }
+
+    describe('should take the following relations', () => {
+        it('B(y, x) = B(x, y)', () => {
+            repeat(20, () => {
+                const x = rand(), y = rand();
+                assert.approximately(
+                    beta(y, x), 
+                    beta(x, y),
+                    epsilon, `x = ${x}, y = ${y}`);
+            })
+        });
+
+        it('B(x, y) = Γ(x)Γ(y)/Γ(x+y)', () => {
+            repeat(20, () => {
+                const x = rand(), y = rand();
+                assert.approximately(
+                    beta(x, y), 
+                    gamma(x)*gamma(y)/gamma(x+y), 
+                    epsilon, `x = ${x}, y = ${y}`);
+            })
+        });
+
+        it('B(x, y) = B(x, y+1) + B(x+1, y)', () => {
+            repeat(20, () => {
+                const x = rand(), y = rand();
+                assert.approximately(
+                    beta(x, y+1) + beta(x+1, y),
+                    beta(x, y),
+                    epsilon, `x = ${x}, y = ${y}`);
+            })
+        });
+
+        it('B(1, x) = 1/x', () => {
+            assertTheSameMathFunc(
+                x => beta(1, x),
+                x => 1/x,
+                x => x > 0);
+        });
+
+        it('B(x, 1-x) = π/sin(πx)', () => {
+            assertTheSameMathFunc(
+                x => beta(x, 1-x),
+                x => Math.PI/Math.sin(Math.PI*x),
+                x => x > 1 && !Number.isInteger(x));
+        });
+    });
+});
+
 function assertTheSameMathFunc(
         f: (x: number) => number, g: (x: number) => number,
         filter = (x: number) => true, additionalMessage = '', varName = 'x', n = 1000, min = -5, max = 5){
@@ -35,10 +97,10 @@ function assertTheSameMathFunc(
         const xround = Math.round(x*n)/n;
         assertAt(xround);
     }
-    for(let i = 0; i < n; i++){
+    repeat(n, () => {
         const xrand = min + (max - min)*Math.random();
         assertAt(xrand);
-    }
+    });
     if(nTested === 0) throw new Error(`No point is tested`);
 
     function assertAt(x: number){
@@ -63,40 +125,40 @@ function assertTheSameMathFunc(
 }
 
 /**
- * The following tests are 
+ * The following tests refer to
  * <a href="https://en.m.wikipedia.org/wiki/Incomplete_gamma_function">Incomplete gamma function</a>
  */
 describe('Incomplete Gamma functions', () => {
 
     describe('should satisfy the following relations', () => {
         it('γ(s, x) + Γ(s, x) = Γ(s)', () => {
-            for(let i = 0; i < 20; i++){
+            repeat(20, () => {
                 const x = Math.random() * 100;  // TODO x < 0
                 assertTheSameMathFunc(
                     s => igamma(s, x) + iGamma(s, x), 
                     s => gamma(s), 
                     s => s > 0, `x = ${x}`, 's');
-            }
+            });
         });
 
         it('γ(s+1, x) = s*γ(s, x) - x^s*e^{-x}', () => {
-            for(let i = 0; i < 20; i++){
+            repeat(20, () => {
                 const s = Math.random() * 10;
                 assertTheSameMathFunc(
                     x => igamma(s+1, x), 
                     x => s*igamma(s, x) - Math.pow(x, s) * Math.exp(-x),
                     undefined, `s = ${s}`);
-            }
+            });
         });
 
         it('Γ(s+1, x) = s*Γ(s, x) + x^s*e^{-x}', () => {
-            for(let i = 0; i < 20; i++){
+            repeat(20, () => {
                 const s = Math.random() * 10;
                 assertTheSameMathFunc(
                     x => iGamma(s+1, x), 
                     x => s*iGamma(s, x) + Math.pow(x, s) * Math.exp(-x),
                     undefined, `s = ${s}`);
-            }
+            });
         });
 
         it('γ(1, x) = 1 - e^{-x}', () => {
@@ -150,23 +212,24 @@ describe('Regularized Gamma functions', () => {
 
     describe('should satisfy the following relations', () => {
         it('P(s, x) = γ(s, x)/Γ(s)', () => {
-            for(let i = 0; i < 10; i++){
+            repeat(10, () => {
                 const s = Math.random() * 100;
                 assertTheSameMathFunc(
                     x => pGamma(s, x), 
                     x => igamma(s, x) / gamma(s), 
                     undefined, `s = ${s}`);
-            }
+            });
         });
 
         it('Q(s, x) = Γ(s, x)/Γ(s)', () => {
-            for(let i = 0; i < 10; i++){
+            repeat(10, () => {
                 const s = Math.random() * 100;
                 assertTheSameMathFunc(
                     x => qGamma(s, x), 
                     x => iGamma(s, x) / gamma(s), 
                     undefined, `s = ${s}`);
-            }
+
+            });
         });
     });
 });
